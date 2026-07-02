@@ -35,7 +35,7 @@ dependencies:
   shamsi_date: ^1.1.1
 
   # Notifications
-  flutter_local_notifications: ^16.3.3
+  flutter_local_notifications: 15.1.0
 
   # Fonts
   google_fonts: ^6.3.2
