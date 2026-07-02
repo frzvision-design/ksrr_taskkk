@@ -36,8 +36,13 @@ jobs:
       - name: Analyze project
         run: flutter doctor -v
 
-      - name: Build Release APK
-        run: flutter build apk --release
+      - name: Build Release APK (Obfuscated)
+        run: |
+          mkdir -p build/debug-info
+          flutter build apk \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/debug-info
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -45,3 +50,9 @@ jobs:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      - name: Upload Debug Symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-symbols
+          path: build/debug-info
