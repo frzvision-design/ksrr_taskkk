@@ -33,22 +33,28 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Analyze project
+      - name: Flutter Doctor
         run: flutter doctor -v
 
-      - name: Build Release APK (Obfuscated)
+      - name: Create debug info directory
+        run: mkdir -p build/debug-info
+
+      - name: Build Release APK (Optimized)
         run: |
-          mkdir -p build/debug-info
           flutter build apk \
             --release \
+            --split-per-abi \
             --obfuscate \
             --split-debug-info=build/debug-info
 
-      - name: Upload APK
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: release-apks
+          path: |
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
           if-no-files-found: error
 
       - name: Upload Debug Symbols
@@ -56,3 +62,4 @@ jobs:
         with:
           name: debug-symbols
           path: build/debug-info
+          if-no-files-found: error
