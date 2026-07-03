@@ -34,7 +34,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     _tabs = [
       const EmployeeManagementTab(),
       const TaskCreationTab(),
-      PersonalChecklistScreen(userId: widget.user.id), // چک‌لیست شخصی
+      PersonalChecklistScreen(userId: widget.user.uid), // چک‌لیست شخصی
       const OverviewDashboardTab(),
       SettingsScreen(onThemeChanged: widget.onThemeChanged),
     ];

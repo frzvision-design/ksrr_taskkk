@@ -31,7 +31,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     super.initState();
     _tabs = [
       MyTasksTab(user: widget.user),
-      PersonalChecklistScreen(userId: widget.user.id), // چک‌لیست شخصی
+      PersonalChecklistScreen(userId: widget.user.uid), // چک‌لیست شخصی
       SettingsScreen(onThemeChanged: widget.onThemeChanged),
     ];
   }
