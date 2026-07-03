@@ -18,7 +18,15 @@ class BackendService {
     return await _supabase.getEmployees();
   }
 
+  Future<List<UserModel>> getUsers() async {
+    return await _supabase.getUsers();
+  }
+
   Future<bool> createTask(TaskModel task) async {
+    return await _supabase.createTask(task);
+  }
+
+  Future<bool> addTask(TaskModel task) async {
     return await _supabase.createTask(task);
   }
 

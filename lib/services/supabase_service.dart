@@ -67,6 +67,21 @@ class SupabaseService {
     }
   }
 
+  Future<List<UserModel>> getUsers() async {
+    try {
+      final response = await _client
+          .from('users')
+          .select();
+
+      return (response as List)
+          .map((e) => UserModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      print('Get users error: $e');
+      return [];
+    }
+  }
+
   // ==================== TASKS ====================
 
   Future<bool> createTask(TaskModel task) async {
