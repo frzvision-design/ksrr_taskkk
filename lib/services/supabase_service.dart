@@ -6,7 +6,7 @@ import '../models/task_checklist_model.dart';
 
 class SupabaseService {
   static const String supabaseUrl = 'https://gywuopnmxnvjdskmmnmi.supabase.co';
-  static const String supabaseKey = 'sb_publishable_pNOFiK5NT4JG6wWyk_OCrA_hAz2NwjF';
+  static const String supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5d3VvcG5teG52amRza21tbm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDEyODMsImV4cCI6MjA5ODM3NzI4M30.jvOGjQDzdk5R2biOrnVcPlaFub55VIj5hzdJOJh_sQk';
 
   static Future<void> initialize() async {
     await Supabase.initialize(
