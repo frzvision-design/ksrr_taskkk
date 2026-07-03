@@ -6,7 +6,7 @@ import '../settings_screen.dart';
 import 'employee_management_tab.dart';
 import 'task_creation_tab.dart';
 import 'overview_dashboard_tab.dart';
-import 'task_checklist_builder_screen.dart';
+import '../common/personal_checklist_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   final UserModel user;
@@ -34,7 +34,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     _tabs = [
       const EmployeeManagementTab(),
       const TaskCreationTab(),
-      TaskChecklistBuilderScreen(task: null), // چک‌لیست مستقل
+      PersonalChecklistScreen(userId: widget.user.id), // چک‌لیست شخصی
       const OverviewDashboardTab(),
       SettingsScreen(onThemeChanged: widget.onThemeChanged),
     ];

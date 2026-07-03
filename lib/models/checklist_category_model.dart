@@ -1,29 +1,29 @@
-class ChecklistItemModel {
+class ChecklistCategoryModel {
   final String id;
-  final String categoryId;
+  final String userId;
   final String title;
   final String? description;
-  final int order;
+  final String? icon;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  ChecklistItemModel({
+  ChecklistCategoryModel({
     required this.id,
-    required this.categoryId,
+    required this.userId,
     required this.title,
     this.description,
-    required this.order,
+    this.icon,
     required this.createdAt,
     this.updatedAt,
   });
 
-  factory ChecklistItemModel.fromJson(Map<String, dynamic> json) {
-    return ChecklistItemModel(
+  factory ChecklistCategoryModel.fromJson(Map<String, dynamic> json) {
+    return ChecklistCategoryModel(
       id: json['id'] as String,
-      categoryId: json['category_id'] as String,
+      userId: json['user_id'] as String,
       title: json['title'] as String,
       description: json['description'] as String?,
-      order: json['order'] as int,
+      icon: json['icon'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
@@ -34,30 +34,30 @@ class ChecklistItemModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'category_id': categoryId,
+      'user_id': userId,
       'title': title,
       'description': description,
-      'order': order,
+      'icon': icon,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
-  ChecklistItemModel copyWith({
+  ChecklistCategoryModel copyWith({
     String? id,
-    String? categoryId,
+    String? userId,
     String? title,
     String? description,
-    int? order,
+    String? icon,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return ChecklistItemModel(
+    return ChecklistCategoryModel(
       id: id ?? this.id,
-      categoryId: categoryId ?? this.categoryId,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       description: description ?? this.description,
-      order: order ?? this.order,
+      icon: icon ?? this.icon,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
