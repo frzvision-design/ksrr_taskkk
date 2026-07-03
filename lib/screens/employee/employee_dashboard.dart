@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../login_screen.dart';
 import '../settings_screen.dart';
 import 'my_tasks_tab.dart';
-import 'personal_checklist_screen.dart';
+import '../admin/task_checklist_builder_screen.dart';
 
 class EmployeeDashboard extends StatefulWidget {
   final UserModel user;
@@ -31,7 +31,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     super.initState();
     _tabs = [
       MyTasksTab(user: widget.user),
-      PersonalChecklistScreen(user: widget.user),
+      TaskChecklistBuilderScreen(task: null), // استفاده از همان صفحه چک‌لیست مدیر
       SettingsScreen(onThemeChanged: widget.onThemeChanged),
     ];
   }

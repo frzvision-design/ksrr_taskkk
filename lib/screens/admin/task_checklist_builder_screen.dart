@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../models/task_checklist_model.dart';
-import '../../services/backend_service.dart';
+import '../../services/local_checklist_service.dart';
 import 'package:uuid/uuid.dart';
 
 class TaskChecklistBuilderScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class TaskChecklistBuilderScreen extends StatefulWidget {
 }
 
 class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen> {
-  final _backendService = BackendService();
+  final _localChecklistService = LocalChecklistService();
   final _uuid = const Uuid();
   List<TaskChecklistModel> _checklistItems = [];
   bool _isLoading = false;
@@ -26,16 +26,13 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
   }
 
   Future<void> _loadChecklist() async {
-    if (widget.task == null) {
-      // در حالت مستقل، چک‌لیست خالی
-      setState(() {
-        _checklistItems = [];
-        _isLoading = false;
-      });
-      return;
-    }
     setState(() => _isLoading = true);
-    _checklistItems = await _backendService.getTaskChecklist(widget.task!.taskId);
+    if (widget.task == null) {
+      // در حالت مستقل، بارگذاری چک‌لیست‌های standalone
+      _checklistItems = await _localChecklistService.getTaskChecklist('standalone');
+    } else {
+      _checklistItems = await _localChecklistService.getTaskChecklist(widget.task!.taskId);
+    }
     setState(() => _isLoading = false);
   }
 
@@ -149,7 +146,7 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
         createdAt: DateTime.now(),
       );
 
-      final success = await _backendService.createTaskChecklistItem(newItem);
+      final success = await _localChecklistService.createChecklistItem(newItem);
       if (success) {
         await _loadChecklist();
         if (mounted) {
@@ -185,7 +182,7 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
     );
 
     if (confirmed == true) {
-      final success = await _backendService.deleteTaskChecklistItem(id);
+      final success = await _localChecklistService.deleteChecklistItem(id);
       if (success) {
         await _loadChecklist();
         if (mounted) {

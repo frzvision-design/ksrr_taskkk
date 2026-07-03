@@ -1,124 +1,134 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/personal_checklist_model.dart';
+import '../models/task_checklist_model.dart';
 
 class LocalChecklistService {
-  static const String _keyPrefix = 'personal_checklist_';
+  static const String _checklistKey = 'local_checklists';
 
-  String _key(String userUid) => '$_keyPrefix$userUid';
-
-  Future<List<PersonalChecklistCategory>> getCategories(String userUid) async {
+  // دریافت همه چک‌لیست‌ها
+  Future<List<TaskChecklistModel>> getAllChecklists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_checklistKey);
+    
+    if (jsonString == null || jsonString.isEmpty) {
+      return [];
+    }
+    
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_key(userUid));
-      if (raw == null) return [];
-      final List<dynamic> list = jsonDecode(raw);
-      return list.map((e) => PersonalChecklistCategory.fromJson(e)).toList();
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((json) => TaskChecklistModel.fromJson(json)).toList();
     } catch (e) {
+      print('Error loading checklists: $e');
       return [];
     }
   }
 
-  Future<void> _saveCategories(
-      String userUid, List<PersonalChecklistCategory> categories) async {
+  // دریافت چک‌لیست برای یک task خاص (یا standalone)
+  Future<List<TaskChecklistModel>> getTaskChecklist(String taskId) async {
+    final allChecklists = await getAllChecklists();
+    return allChecklists.where((item) => item.taskId == taskId).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+  }
+
+  // ذخیره یک آیتم جدید
+  Future<bool> createChecklistItem(TaskChecklistModel item) async {
+    try {
+      final allChecklists = await getAllChecklists();
+      allChecklists.add(item);
+      await _saveAllChecklists(allChecklists);
+      return true;
+    } catch (e) {
+      print('Error creating checklist item: $e');
+      return false;
+    }
+  }
+
+  // بروزرسانی یک آیتم
+  Future<bool> updateChecklistItem(TaskChecklistModel item) async {
+    try {
+      final allChecklists = await getAllChecklists();
+      final index = allChecklists.indexWhere((i) => i.id == item.id);
+      
+      if (index != -1) {
+        allChecklists[index] = item;
+        await _saveAllChecklists(allChecklists);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating checklist item: $e');
+      return false;
+    }
+  }
+
+  // حذف یک آیتم
+  Future<bool> deleteChecklistItem(String id) async {
+    try {
+      final allChecklists = await getAllChecklists();
+      allChecklists.removeWhere((item) => item.id == id);
+      await _saveAllChecklists(allChecklists);
+      return true;
+    } catch (e) {
+      print('Error deleting checklist item: $e');
+      return false;
+    }
+  }
+
+  // تغییر وضعیت تکمیل
+  Future<bool> toggleChecklistItem(String id, bool isCompleted) async {
+    try {
+      final allChecklists = await getAllChecklists();
+      final index = allChecklists.indexWhere((item) => item.id == id);
+      
+      if (index != -1) {
+        final item = allChecklists[index];
+        allChecklists[index] = TaskChecklistModel(
+          id: item.id,
+          taskId: item.taskId,
+          title: item.title,
+          description: item.description,
+          order: item.order,
+          type: item.type,
+          conditionTrue: item.conditionTrue,
+          conditionFalse: item.conditionFalse,
+          isCompleted: isCompleted,
+          createdAt: item.createdAt,
+          completedAt: isCompleted ? DateTime.now() : null,
+        );
+        await _saveAllChecklists(allChecklists);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error toggling checklist item: $e');
+      return false;
+    }
+  }
+
+  // حذف همه چک‌لیست‌های یک task
+  Future<bool> deleteTaskChecklists(String taskId) async {
+    try {
+      final allChecklists = await getAllChecklists();
+      allChecklists.removeWhere((item) => item.taskId == taskId);
+      await _saveAllChecklists(allChecklists);
+      return true;
+    } catch (e) {
+      print('Error deleting task checklists: $e');
+      return false;
+    }
+  }
+
+  // ذخیره همه چک‌لیست‌ها (متد خصوصی)
+  Future<void> _saveAllChecklists(List<TaskChecklistModel> checklists) async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded = jsonEncode(categories.map((c) => c.toJson()).toList());
-    await prefs.setString(_key(userUid), encoded);
+    final jsonList = checklists.map((item) => item.toJson()).toList();
+    final jsonString = jsonEncode(jsonList);
+    await prefs.setString(_checklistKey, jsonString);
   }
 
-  Future<bool> addCategory(
-      String userUid, PersonalChecklistCategory category) async {
-    try {
-      final categories = await getCategories(userUid);
-      categories.add(category);
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> updateCategory(
-      String userUid, PersonalChecklistCategory updated) async {
-    try {
-      final categories = await getCategories(userUid);
-      final index = categories.indexWhere((c) => c.id == updated.id);
-      if (index == -1) return false;
-      categories[index] = updated;
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> deleteCategory(String userUid, String categoryId) async {
-    try {
-      final categories = await getCategories(userUid);
-      categories.removeWhere((c) => c.id == categoryId);
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> addStep(
-      String userUid, String categoryId, PersonalChecklistStep step) async {
-    try {
-      final categories = await getCategories(userUid);
-      final index = categories.indexWhere((c) => c.id == categoryId);
-      if (index == -1) return false;
-      final updatedSteps = List<PersonalChecklistStep>.from(categories[index].steps)
-        ..add(step);
-      categories[index] = categories[index].copyWith(steps: updatedSteps);
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> toggleStep(
-      String userUid, String categoryId, String stepId) async {
-    try {
-      final categories = await getCategories(userUid);
-      final catIndex = categories.indexWhere((c) => c.id == categoryId);
-      if (catIndex == -1) return false;
-
-      final steps = List<PersonalChecklistStep>.from(categories[catIndex].steps);
-      final stepIndex = steps.indexWhere((s) => s.id == stepId);
-      if (stepIndex == -1) return false;
-
-      final step = steps[stepIndex];
-      steps[stepIndex] = step.copyWith(
-        isCompleted: !step.isCompleted,
-        completedAt: !step.isCompleted ? DateTime.now() : null,
-        clearCompletedAt: step.isCompleted,
-      );
-
-      categories[catIndex] = categories[catIndex].copyWith(steps: steps);
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> deleteStep(
-      String userUid, String categoryId, String stepId) async {
-    try {
-      final categories = await getCategories(userUid);
-      final catIndex = categories.indexWhere((c) => c.id == categoryId);
-      if (catIndex == -1) return false;
-
-      final steps = List<PersonalChecklistStep>.from(categories[catIndex].steps)
-        ..removeWhere((s) => s.id == stepId);
-      categories[catIndex] = categories[catIndex].copyWith(steps: steps);
-      await _saveCategories(userUid, categories);
-      return true;
-    } catch (e) {
-      return false;
-    }
+  // پاک کردن همه داده‌ها (برای تست و دیباگ)
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_checklistKey);
   }
 }

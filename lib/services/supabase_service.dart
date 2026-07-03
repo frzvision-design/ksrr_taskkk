@@ -86,11 +86,14 @@ class SupabaseService {
 
   Future<bool> createTask(TaskModel task) async {
     try {
+      print('🔵 Creating task with data: ${task.toJson()}');
       await _client.from('tasks').insert(task.toJson());
+      print('✅ Task created successfully!');
       return true;
     } catch (e) {
-      print('Create task error: $e');
-      return false;
+      print('❌ Create task error: $e');
+      print('Task data that failed: ${task.toJson()}');
+      rethrow; // پاس دادن خطا به بالا برای نمایش به کاربر
     }
   }
 

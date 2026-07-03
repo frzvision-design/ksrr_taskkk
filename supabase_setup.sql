@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS task_checklist (
     condition_false TEXT,
     is_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
-    completed_at TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE
+    completed_at TIMESTAMP
+    -- حذف Foreign Key برای پشتیبانی از چک‌لیست‌های standalone
 );
 
 -- 5. غیرفعال کردن Row Level Security برای دسترسی آزاد

@@ -189,8 +189,12 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
         attachmentData = base64Encode(bytes);
       }
 
+      final taskId = _uuid.v4();
+      print('🔵 Creating task with ID: $taskId');
+      print('🔵 Assigned to: ${_selectedEmployee!.uid} (${_selectedEmployee!.name})');
+
       final task = TaskModel(
-        taskId: _uuid.v4(),
+        taskId: taskId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         assignedTo: _selectedEmployee!.uid,
@@ -202,29 +206,53 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
         attachmentData: attachmentData,
       );
 
-      await _backendService.addTask(task);
+      final success = await _backendService.addTask(task);
+      
+      if (success) {
+        print('✅ Task created successfully in database!');
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('وظیفه "${task.title}" با موفقیت برای ${_selectedEmployee!.name} ایجاد شد'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('وظیفه با موفقیت ایجاد شد')),
-        );
-
-        // Clear form
-        _titleController.clear();
-        _descriptionController.clear();
-        setState(() {
-          _selectedEmployee = null;
-          _selectedDeadline = DateTime.now().add(const Duration(days: 1));
-          _recordedAudioPath = null;
-          _recordedAudioBase64 = null;
-          _attachedFile = null;
-          _attachedFileName = null;
-        });
+          // Clear form
+          _titleController.clear();
+          _descriptionController.clear();
+          setState(() {
+            _selectedEmployee = null;
+            _selectedDeadline = DateTime.now().add(const Duration(days: 1));
+            _recordedAudioPath = null;
+            _recordedAudioBase64 = null;
+            _attachedFile = null;
+            _attachedFileName = null;
+          });
+        }
+      } else {
+        print('❌ Task creation returned false');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('خطا: وظیفه ایجاد نشد. لطفاً دوباره تلاش کنید.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
       }
     } catch (e) {
+      print('❌ Exception in _createTask: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در ایجاد وظیفه: $e')),
+          SnackBar(
+            content: Text('خطا در ایجاد وظیفه: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {

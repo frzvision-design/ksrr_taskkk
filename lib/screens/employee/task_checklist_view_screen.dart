@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../models/task_checklist_model.dart';
-import '../../services/backend_service.dart';
+import '../../services/local_checklist_service.dart';
 
 class TaskChecklistViewScreen extends StatefulWidget {
   final TaskModel task;
@@ -13,7 +13,7 @@ class TaskChecklistViewScreen extends StatefulWidget {
 }
 
 class _TaskChecklistViewScreenState extends State<TaskChecklistViewScreen> {
-  final _backendService = BackendService();
+  final _localChecklistService = LocalChecklistService();
   List<TaskChecklistModel> _checklistItems = [];
   bool _isLoading = false;
 
@@ -25,12 +25,12 @@ class _TaskChecklistViewScreenState extends State<TaskChecklistViewScreen> {
 
   Future<void> _loadChecklist() async {
     setState(() => _isLoading = true);
-    _checklistItems = await _backendService.getTaskChecklist(widget.task.taskId);
+    _checklistItems = await _localChecklistService.getTaskChecklist(widget.task.taskId);
     setState(() => _isLoading = false);
   }
 
   Future<void> _toggleItem(TaskChecklistModel item) async {
-    final success = await _backendService.toggleTaskChecklistItem(
+    final success = await _localChecklistService.toggleChecklistItem(
       item.id,
       !item.isCompleted,
     );

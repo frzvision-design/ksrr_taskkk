@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         
                         // Company Name in Arabic
                         Text(
-                          'شركة الكوثر للخدمات الجامعية',
+                          'شركة الكوثر ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 28,
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         
                         Text(
-                          'نظام إدارة الخدمات',
+                          'للخدمات الجامعیة',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18,
