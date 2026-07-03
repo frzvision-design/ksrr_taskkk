@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
         title: 'سیستم مدیریت وظایف',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
+        darkTheme: AppThemeDark.darkTheme,
         themeMode: _themeMode,
         locale: const Locale('fa', 'IR'),
         supportedLocales: const [

@@ -47,11 +47,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (user.role == 'admin') {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
+              MaterialPageRoute(
+                builder: (_) => AdminDashboard(
+                  user: user,
+                  onThemeChanged: (_) {}, // dummy
+                ),
+              ),
             );
           } else {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => EmployeeDashboard(user: user)),
+              MaterialPageRoute(
+                builder: (_) => EmployeeDashboard(
+                  user: user,
+                  onThemeChanged: (_) {}, // dummy
+                ),
+              ),
             );
           }
         } else {

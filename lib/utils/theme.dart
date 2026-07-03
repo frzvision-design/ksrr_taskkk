@@ -123,13 +123,14 @@ class AppTheme {
   );
 }
 
-  // Dark Theme Colors
+// Dark Theme
+class AppThemeDark {
   static const Color darkPrimaryColor = Color(0xFFD4AF37); // Golden
   static const Color darkBackgroundColor = Color(0xFF1A1A1A);
   static const Color darkSurfaceColor = Color(0xFF2C2C2C);
   static const Color darkCardColor = Color(0xFF383838);
 
-  static ThemeData darkTheme = ThemeData(
+  static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     primaryColor: darkPrimaryColor,
@@ -138,8 +139,8 @@ class AppTheme {
       seedColor: darkPrimaryColor,
       brightness: Brightness.dark,
       primary: darkPrimaryColor,
-      secondary: accentColor,
-      error: dangerColor,
+      secondary: AppTheme.accentColor,
+      error: AppTheme.dangerColor,
       surface: darkSurfaceColor,
     ),
     
@@ -196,7 +197,7 @@ class AppTheme {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: dangerColor),
+        borderSide: const BorderSide(color: Color(0xFFE74C3C)),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: TextStyle(
