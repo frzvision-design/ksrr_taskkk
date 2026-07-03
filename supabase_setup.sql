@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT NOW(),
     deadline TIMESTAMP NOT NULL,
+    voice_note TEXT,
+    attachment_name TEXT,
+    attachment_data TEXT,
     FOREIGN KEY (assigned_to) REFERENCES users(uid)
 );
 
@@ -68,9 +71,12 @@ DELETE FROM users;
 
 -- 7. درج کاربران پیش‌فرض
 INSERT INTO users (uid, name, username, password, role, push_token) VALUES
-    ('admin-001', 'مدیر سیستم', 'admin', 'admin123', 'admin', ''),
-    ('emp-001', 'علی احمدی', 'ali', '1234', 'employee', ''),
-    ('emp-002', 'سارا محمدی', 'sara', '1234', 'employee', '');
+    ('admin-001', 'تقی‌زاده', 'taghizadeh', 'taghizadeh', 'admin', ''),
+    ('emp-001', 'مهدی', 'mahdi', 'mahdi', 'employee', ''),
+    ('emp-002', 'صارح', 'sareh', 'sareh', 'employee', ''),
+    ('emp-003', 'فرزاد', 'farzad', 'farzad', 'employee', ''),
+    ('emp-004', 'زینب', 'zeinab', 'zeinab', 'employee', ''),
+    ('emp-005', 'محمد', 'mohammad', 'mohammad', 'employee', '');
 
 -- 8. درج وظایف نمونه
 INSERT INTO tasks (task_id, title, description, assigned_to, status, created_at, deadline) VALUES

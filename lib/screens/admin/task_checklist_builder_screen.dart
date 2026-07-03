@@ -5,9 +5,9 @@ import '../../services/backend_service.dart';
 import 'package:uuid/uuid.dart';
 
 class TaskChecklistBuilderScreen extends StatefulWidget {
-  final TaskModel task;
+  final TaskModel? task; // nullable برای استفاده مستقل
 
-  const TaskChecklistBuilderScreen({Key? key, required this.task}) : super(key: key);
+  const TaskChecklistBuilderScreen({Key? key, this.task}) : super(key: key);
 
   @override
   State<TaskChecklistBuilderScreen> createState() => _TaskChecklistBuilderScreenState();
@@ -26,8 +26,16 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
   }
 
   Future<void> _loadChecklist() async {
+    if (widget.task == null) {
+      // در حالت مستقل، چک‌لیست خالی
+      setState(() {
+        _checklistItems = [];
+        _isLoading = false;
+      });
+      return;
+    }
     setState(() => _isLoading = true);
-    _checklistItems = await _backendService.getTaskChecklist(widget.task.taskId);
+    _checklistItems = await _backendService.getTaskChecklist(widget.task!.taskId);
     setState(() => _isLoading = false);
   }
 
@@ -131,7 +139,7 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
     if (result == true && titleController.text.isNotEmpty) {
       final newItem = TaskChecklistModel(
         id: _uuid.v4(),
-        taskId: widget.task.taskId,
+        taskId: widget.task?.taskId ?? 'standalone', // برای مستقل standalone
         title: titleController.text,
         description: descController.text,
         order: _checklistItems.length,
@@ -239,7 +247,7 @@ class _TaskChecklistBuilderScreenState extends State<TaskChecklistBuilderScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'چک‌لیست: ${widget.task.title}',
+          widget.task != null ? 'چک‌لیست: ${widget.task!.title}' : 'چک‌لیست‌های من',
           style: const TextStyle(fontSize: 16),
         ),
         centerTitle: true,

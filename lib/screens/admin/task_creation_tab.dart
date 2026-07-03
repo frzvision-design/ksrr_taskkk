@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/task_model.dart';
 import '../../services/backend_service.dart';
@@ -17,11 +22,17 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
   final _uuid = const Uuid();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _audioRecorder = AudioRecorder();
 
   List<UserModel> _employees = [];
   UserModel? _selectedEmployee;
   DateTime _selectedDeadline = DateTime.now().add(const Duration(days: 1));
   bool _isLoading = false;
+  bool _isRecording = false;
+  String? _recordedAudioPath;
+  String? _recordedAudioBase64;
+  File? _attachedFile;
+  String? _attachedFileName;
 
   @override
   void initState() {
@@ -33,6 +44,7 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _audioRecorder.dispose();
     super.dispose();
   }
 
@@ -69,9 +81,109 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
     }
   }
 
+  Future<void> _startRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final directory = await getTemporaryDirectory();
+        final path = '${directory.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        
+        await _audioRecorder.start(const RecordConfig(), path: path);
+        setState(() {
+          _isRecording = true;
+          _recordedAudioPath = path;
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('دسترسی به میکروفون رد شد')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در شروع ضبط: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      final path = await _audioRecorder.stop();
+      if (path != null) {
+        final file = File(path);
+        final bytes = await file.readAsBytes();
+        setState(() {
+          _isRecording = false;
+          _recordedAudioPath = path;
+          _recordedAudioBase64 = base64Encode(bytes);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('صدا ضبط شد')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در توقف ضبط: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          _attachedFile = File(result.files.single.path!);
+          _attachedFileName = result.files.single.name;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فایل ${result.files.single.name} انتخاب شد')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در انتخاب فایل: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeVoice() {
+    setState(() {
+      _recordedAudioPath = null;
+      _recordedAudioBase64 = null;
+    });
+  }
+
+  void _removeFile() {
+    setState(() {
+      _attachedFile = null;
+      _attachedFileName = null;
+    });
+  }
+
   Future<void> _createTask() async {
     if (_formKey.currentState!.validate() && _selectedEmployee != null) {
       setState(() => _isLoading = true);
+
+      String? attachmentData;
+      if (_attachedFile != null) {
+        final bytes = await _attachedFile!.readAsBytes();
+        attachmentData = base64Encode(bytes);
+      }
 
       final task = TaskModel(
         taskId: _uuid.v4(),
@@ -81,6 +193,9 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
         status: 'pending',
         createdAt: DateTime.now(),
         deadline: _selectedDeadline,
+        voiceNote: _recordedAudioBase64,
+        attachmentName: _attachedFileName,
+        attachmentData: attachmentData,
       );
 
       final success = await _backendService.createTask(task);
@@ -92,7 +207,7 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تسک برای ${_selectedEmployee!.name} ارسال شد'),
+            content: Text('وظیفه برای ${_selectedEmployee!.name} ارسال شد'),
           ),
         );
         _titleController.clear();
@@ -100,10 +215,14 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
         setState(() {
           _selectedEmployee = null;
           _selectedDeadline = DateTime.now().add(const Duration(days: 1));
+          _recordedAudioPath = null;
+          _recordedAudioBase64 = null;
+          _attachedFile = null;
+          _attachedFileName = null;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('خطا در ایجاد تسک')),
+          const SnackBar(content: Text('خطا در ایجاد وظیفه')),
         );
       }
     } else if (_selectedEmployee == null) {
@@ -123,7 +242,7 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'ایجاد تسک جدید',
+              'ایجاد وظیفه جدید',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.right,
             ),
@@ -131,7 +250,7 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'عنوان تسک',
+                labelText: 'عنوان وظیفه',
                 prefixIcon: Icon(Icons.title),
                 border: OutlineInputBorder(),
               ),
@@ -185,6 +304,129 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
               ),
             ),
             const SizedBox(height: 24),
+            const Divider(),
+            const Text(
+              'پیوست‌ها (اختیاری)',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.right,
+            ),
+            const SizedBox(height: 16),
+            // Voice Recording
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (_recordedAudioPath != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: _removeVoice,
+                          ),
+                        const Expanded(
+                          child: Text(
+                            'توضیحات صوتی',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                        const Icon(Icons.mic, color: Colors.blue),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_recordedAudioPath != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('صدا ضبط شده است'),
+                          ],
+                        ),
+                      )
+                    else
+                      ElevatedButton.icon(
+                        onPressed: _isRecording ? _stopRecording : _startRecording,
+                        icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+                        label: Text(_isRecording ? 'توقف ضبط' : 'شروع ضبط صدا'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isRecording ? Colors.red : Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // File Attachment
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (_attachedFileName != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: _removeFile,
+                          ),
+                        const Expanded(
+                          child: Text(
+                            'فایل پیوست',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                        const Icon(Icons.attach_file, color: Colors.orange),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_attachedFileName != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.insert_drive_file, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _attachedFileName!,
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      OutlinedButton.icon(
+                        onPressed: _pickFile,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('انتخاب فایل'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _createTask,
               style: ElevatedButton.styleFrom(
@@ -197,7 +439,7 @@ class _TaskCreationTabState extends State<TaskCreationTab> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text(
-                      'ایجاد تسک',
+                      'ایجاد وظیفه',
                       style: TextStyle(fontSize: 18),
                     ),
             ),

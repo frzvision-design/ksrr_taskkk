@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../models/task_model.dart';
 import '../../services/backend_service.dart';
 import '../../widgets/countdown_timer.dart';
@@ -14,13 +18,21 @@ class TaskDetailScreen extends StatefulWidget {
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final _backendService = BackendService();
+  final _audioPlayer = AudioPlayer();
   late String _currentStatus;
   bool _isUpdating = false;
+  bool _isPlayingAudio = false;
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.task.status;
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   Color _getStatusColor() {
@@ -51,7 +63,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       setState(() => _currentStatus = newStatus);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('وضعیت تسک به‌روزرسانی شد')),
+        const SnackBar(content: Text('وضعیت وظیفه به‌روزرسانی شد')),
       );
     } else {
       if (!mounted) return;
@@ -61,11 +73,64 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
+  Future<void> _playAudio() async {
+    if (widget.task.voiceNote == null) return;
+    
+    try {
+      if (_isPlayingAudio) {
+        await _audioPlayer.stop();
+        setState(() => _isPlayingAudio = false);
+        return;
+      }
+
+      final bytes = base64Decode(widget.task.voiceNote!);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/temp_audio.m4a');
+      await file.writeAsBytes(bytes);
+
+      await _audioPlayer.play(DeviceFileSource(file.path));
+      setState(() => _isPlayingAudio = true);
+
+      _audioPlayer.onPlayerComplete.listen((_) {
+        setState(() => _isPlayingAudio = false);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در پخش صدا: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadFile() async {
+    if (widget.task.attachmentData == null) return;
+
+    try {
+      final bytes = base64Decode(widget.task.attachmentData!);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/${widget.task.attachmentName}');
+      await file.writeAsBytes(bytes);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فایل در ${file.path} ذخیره شد')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در دانلود فایل: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('جزئیات تسک'),
+        title: const Text('جزئیات وظیفه'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -148,6 +213,56 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Voice Note (if exists)
+            if (widget.task.voiceNote != null)
+              Card(
+                color: Colors.blue.shade50,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Icon(
+                      _isPlayingAudio ? Icons.stop : Icons.play_arrow,
+                      color: Colors.white,
+                    ),
+                  ),
+                  title: const Text(
+                    'پیام صوتی',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    textDirection: TextDirection.rtl,
+                  ),
+                  subtitle: Text(
+                    _isPlayingAudio ? 'در حال پخش...' : 'ضربه بزنید برای پخش',
+                    textDirection: TextDirection.rtl,
+                  ),
+                  trailing: const Icon(Icons.mic),
+                  onTap: _playAudio,
+                ),
+              ),
+            if (widget.task.voiceNote != null) const SizedBox(height: 16),
+            // Attachment (if exists)
+            if (widget.task.attachmentName != null)
+              Card(
+                color: Colors.orange.shade50,
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.attach_file, color: Colors.white),
+                  ),
+                  title: Text(
+                    widget.task.attachmentName!,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textDirection: TextDirection.rtl,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: const Text(
+                    'ضربه بزنید برای دانلود',
+                    textDirection: TextDirection.rtl,
+                  ),
+                  trailing: const Icon(Icons.download),
+                  onTap: _downloadFile,
+                ),
+              ),
+            if (widget.task.attachmentName != null) const SizedBox(height: 16),
             // Dates Info
             Card(
               child: Padding(
@@ -231,7 +346,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                               ),
                             )
                           : const Text(
-                              'شروع انجام تسک',
+                              'شروع انجام وظیفه',
                               style: TextStyle(fontSize: 18),
                             ),
                     ),
@@ -254,7 +369,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                               ),
                             )
                           : const Text(
-                              'تکمیل تسک',
+                              'تکمیل وظیفه',
                               style: TextStyle(fontSize: 18),
                             ),
                     ),

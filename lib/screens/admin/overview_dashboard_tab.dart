@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../services/backend_service.dart';
 import '../../widgets/task_card.dart';
-import 'task_checklist_builder_screen.dart';
 
 class OverviewDashboardTab extends StatefulWidget {
   const OverviewDashboardTab({Key? key}) : super(key: key);
@@ -98,7 +97,7 @@ class _OverviewDashboardTabState extends State<OverviewDashboardTab> {
               : _filteredTasks.isEmpty
                   ? const Center(
                       child: Text(
-                        'هیچ تسکی یافت نشد',
+                        'هیچ وظیفه‌ای یافت نشد',
                         style: TextStyle(fontSize: 18),
                       ),
                     )
@@ -112,15 +111,6 @@ class _OverviewDashboardTabState extends State<OverviewDashboardTab> {
                           return TaskCard(
                             task: task,
                             onRefresh: _loadTasks,
-                            showChecklistButton: true,
-                            onChecklistTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TaskChecklistBuilderScreen(task: task),
-                                ),
-                              );
-                            },
                           );
                         },
                       ),

@@ -6,6 +6,9 @@ class TaskModel {
   final String status; // 'pending', 'in_progress', 'completed'
   final DateTime createdAt;
   final DateTime deadline;
+  final String? voiceNote; // base64 audio
+  final String? attachmentName; // نام فایل
+  final String? attachmentData; // base64 file data
 
   TaskModel({
     required this.taskId,
@@ -15,6 +18,9 @@ class TaskModel {
     required this.status,
     required this.createdAt,
     required this.deadline,
+    this.voiceNote,
+    this.attachmentName,
+    this.attachmentData,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +32,9 @@ class TaskModel {
       status: json['status'] ?? 'pending',
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       deadline: DateTime.parse(json['deadline'] ?? DateTime.now().toIso8601String()),
+      voiceNote: json['voice_note'],
+      attachmentName: json['attachment_name'],
+      attachmentData: json['attachment_data'],
     );
   }
 
@@ -38,6 +47,9 @@ class TaskModel {
       'status': status,
       'created_at': createdAt.toIso8601String(),
       'deadline': deadline.toIso8601String(),
+      'voice_note': voiceNote,
+      'attachment_name': attachmentName,
+      'attachment_data': attachmentData,
     };
   }
 

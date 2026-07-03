@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'providers/task_provider.dart';
 import 'screens/login_screen.dart';
@@ -15,8 +16,37 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemePreference();
+  }
+
+  Future<void> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeName = prefs.getString('theme_mode') ?? 'light';
+    setState(() {
+      _themeMode = themeName == 'dark'
+          ? ThemeMode.dark
+          : themeName == 'system'
+              ? ThemeMode.system
+              : ThemeMode.light;
+    });
+  }
+
+  void _changeTheme(ThemeMode mode) {
+    setState(() => _themeMode = mode);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +59,8 @@ class MyApp extends StatelessWidget {
         title: 'سیستم مدیریت وظایف',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: _themeMode,
         locale: const Locale('fa', 'IR'),
         supportedLocales: const [
           Locale('fa', 'IR'),
@@ -38,14 +70,16 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const AuthWrapper(),
+        home: AuthWrapper(onThemeChanged: _changeTheme),
       ),
     );
   }
 }
 
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+  final Function(ThemeMode) onThemeChanged;
+
+  const AuthWrapper({super.key, required this.onThemeChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +99,15 @@ class AuthWrapper extends StatelessWidget {
 
         // Route based on role
         if (authProvider.currentUser?.role == 'admin') {
-          return AdminDashboard(user: authProvider.currentUser!);
+          return AdminDashboard(
+            user: authProvider.currentUser!,
+            onThemeChanged: onThemeChanged,
+          );
         } else {
-          return EmployeeDashboard(user: authProvider.currentUser!);
+          return EmployeeDashboard(
+            user: authProvider.currentUser!,
+            onThemeChanged: onThemeChanged,
+          );
         }
       },
     );
