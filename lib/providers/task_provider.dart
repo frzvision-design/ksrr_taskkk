@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
-import '../services/sheets_service.dart';
+import '../services/backend_service.dart';
 
 class TaskProvider extends ChangeNotifier {
-  final _sheetsService = SheetsService();
+  final _backendService = BackendService();
   
   List<TaskModel> _allTasks = [];
   List<TaskModel> _userTasks = [];
@@ -22,7 +22,7 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _allTasks = await _sheetsService.getAllTasks();
+      _allTasks = await _backendService.getAllTasks();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -39,7 +39,7 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _userTasks = await _sheetsService.getTasksByEmployee(uid);
+      _userTasks = await _backendService.getTasksByEmployee(uid);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -76,7 +76,7 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final success = await _sheetsService.updateTaskStatus(taskId, status);
+      final success = await _backendService.updateTaskStatus(taskId, status);
       if (success) {
         // Refresh tasks
         _allTasks = _allTasks.map((t) {

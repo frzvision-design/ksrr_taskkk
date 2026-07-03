@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
-import '../../services/sheets_service.dart';
+import '../../services/backend_service.dart';
 import '../../widgets/task_card.dart';
+import 'task_checklist_builder_screen.dart';
 
 class OverviewDashboardTab extends StatefulWidget {
   const OverviewDashboardTab({Key? key}) : super(key: key);
@@ -11,7 +12,7 @@ class OverviewDashboardTab extends StatefulWidget {
 }
 
 class _OverviewDashboardTabState extends State<OverviewDashboardTab> {
-  final _sheetsService = SheetsService();
+  final _backendService = BackendService();
   List<TaskModel> _allTasks = [];
   String _selectedFilter = 'all'; // 'all', 'pending', 'in_progress', 'completed', 'overdue'
   bool _isLoading = false;
@@ -24,7 +25,7 @@ class _OverviewDashboardTabState extends State<OverviewDashboardTab> {
 
   Future<void> _loadTasks() async {
     setState(() => _isLoading = true);
-    _allTasks = await _sheetsService.getAllTasks();
+    _allTasks = await _backendService.getAllTasks();
     setState(() => _isLoading = false);
   }
 
@@ -107,9 +108,19 @@ class _OverviewDashboardTabState extends State<OverviewDashboardTab> {
                         padding: const EdgeInsets.all(16),
                         itemCount: _filteredTasks.length,
                         itemBuilder: (context, index) {
+                          final task = _filteredTasks[index];
                           return TaskCard(
-                            task: _filteredTasks[index],
+                            task: task,
                             onRefresh: _loadTasks,
+                            showChecklistButton: true,
+                            onChecklistTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TaskChecklistBuilderScreen(task: task),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
 import '../models/user_model.dart';
-import '../services/sheets_service.dart';
+import '../services/backend_service.dart';
 import 'countdown_timer.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskModel task;
   final VoidCallback? onRefresh;
+  final bool showChecklistButton;
+  final VoidCallback? onChecklistTap;
 
   const TaskCard({
     Key? key,
     required this.task,
     this.onRefresh,
+    this.showChecklistButton = false,
+    this.onChecklistTap,
   }) : super(key: key);
 
   Color _getStatusColor() {
@@ -99,6 +103,27 @@ class TaskCard extends StatelessWidget {
                 ),
               ],
             ),
+            
+            // Checklist Button
+            if (showChecklistButton) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onChecklistTap,
+                  icon: const Icon(Icons.checklist_rtl, size: 20),
+                  label: const Text(
+                    'چک‌لیست کار',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFD4AF37),
+                    side: BorderSide(color: const Color(0xFFD4AF37)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

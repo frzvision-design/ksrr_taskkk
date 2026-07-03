@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import '../services/sheets_service.dart';
+import '../services/backend_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final _authService = AuthService();
-  final _sheetsService = SheetsService();
+  final _backendService = BackendService();
   
   UserModel? _currentUser;
   bool _isLoading = false;
@@ -32,7 +32,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final user = await _sheetsService.login(username, password);
+      final user = await _backendService.login(username, password);
       
       if (user != null) {
         _currentUser = user;

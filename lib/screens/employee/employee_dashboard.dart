@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../models/task_model.dart';
 import '../../services/auth_service.dart';
-import '../../services/sheets_service.dart';
+import '../../services/backend_service.dart';
 import '../login_screen.dart';
 import 'task_detail_screen.dart';
 import 'personal_checklist_screen.dart';
+import 'task_checklist_view_screen.dart';
 import '../../widgets/countdown_timer.dart';
 
 class EmployeeDashboard extends StatefulWidget {
@@ -19,7 +20,7 @@ class EmployeeDashboard extends StatefulWidget {
 
 class _EmployeeDashboardState extends State<EmployeeDashboard> {
   final _authService = AuthService();
-  final _sheetsService = SheetsService();
+  final _backendService = BackendService();
   List<TaskModel> _tasks = [];
   bool _isLoading = false;
 
@@ -31,7 +32,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
   Future<void> _loadTasks() async {
     setState(() => _isLoading = true);
-    _tasks = await _sheetsService.getTasksByEmployee(widget.user.uid);
+    _tasks = await _backendService.getTasksByEmployee(widget.user.uid);
     setState(() => _isLoading = false);
   }
 
@@ -166,6 +167,31 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                                       color: Colors.grey[600],
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 12),
+                                // Checklist Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => TaskChecklistViewScreen(task: task),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.checklist_rtl, size: 20),
+                                    label: const Text(
+                                      'مشاهده چک‌لیست کار',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFFD4AF37),
+                                      side: BorderSide(color: const Color(0xFFD4AF37)),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

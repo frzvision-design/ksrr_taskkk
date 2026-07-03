@@ -1,8 +1,9 @@
 import '../models/user_model.dart';
 import '../models/task_model.dart';
+import '../models/task_checklist_model.dart';
 import 'supabase_service.dart';
 
-class SheetsService {
+class BackendService {
   final _supabase = SupabaseService();
 
   Future<UserModel?> login(String username, String password) async {
@@ -31,5 +32,26 @@ class SheetsService {
 
   Future<bool> updateTaskStatus(String taskId, String status) async {
     return await _supabase.updateTaskStatus(taskId, status);
+  }
+
+  // Task Checklist Methods
+  Future<List<TaskChecklistModel>> getTaskChecklist(String taskId) async {
+    return await _supabase.getTaskChecklist(taskId);
+  }
+
+  Future<bool> createTaskChecklistItem(TaskChecklistModel item) async {
+    return await _supabase.createTaskChecklistItem(item);
+  }
+
+  Future<bool> updateTaskChecklistItem(TaskChecklistModel item) async {
+    return await _supabase.updateTaskChecklistItem(item);
+  }
+
+  Future<bool> deleteTaskChecklistItem(String id) async {
+    return await _supabase.deleteTaskChecklistItem(id);
+  }
+
+  Future<bool> toggleTaskChecklistItem(String id, bool isCompleted) async {
+    return await _supabase.toggleTaskChecklistItem(id, isCompleted);
   }
 }

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../models/task_model.dart';
 import '../models/checklist_item_model.dart';
+import '../models/task_checklist_model.dart';
 
 class SupabaseService {
   static const String supabaseUrl = 'https://gywuopnmxnvjdskmmnmi.supabase.co';
@@ -175,6 +176,72 @@ class SupabaseService {
       return true;
     } catch (e) {
       print('Delete checklist item error: $e');
+      return false;
+    }
+  }
+}
+
+  // ==================== TASK CHECKLIST ====================
+
+  Future<List<TaskChecklistModel>> getTaskChecklist(String taskId) async {
+    try {
+      final response = await _client
+          .from('task_checklist')
+          .select()
+          .eq('task_id', taskId)
+          .order('order', ascending: true);
+
+      return (response as List)
+          .map((e) => TaskChecklistModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      print('Get task checklist error: $e');
+      return [];
+    }
+  }
+
+  Future<bool> createTaskChecklistItem(TaskChecklistModel item) async {
+    try {
+      await _client.from('task_checklist').insert(item.toJson());
+      return true;
+    } catch (e) {
+      print('Create task checklist item error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateTaskChecklistItem(TaskChecklistModel item) async {
+    try {
+      await _client
+          .from('task_checklist')
+          .update(item.toJson())
+          .eq('id', item.id);
+      return true;
+    } catch (e) {
+      print('Update task checklist item error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteTaskChecklistItem(String id) async {
+    try {
+      await _client.from('task_checklist').delete().eq('id', id);
+      return true;
+    } catch (e) {
+      print('Delete task checklist item error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> toggleTaskChecklistItem(String id, bool isCompleted) async {
+    try {
+      await _client.from('task_checklist').update({
+        'is_completed': isCompleted,
+        'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+      }).eq('id', id);
+      return true;
+    } catch (e) {
+      print('Toggle task checklist item error: $e');
       return false;
     }
   }

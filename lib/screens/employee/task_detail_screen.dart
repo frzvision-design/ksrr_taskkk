@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
-import '../../services/sheets_service.dart';
+import '../../services/backend_service.dart';
 import '../../widgets/countdown_timer.dart';
 
 class TaskDetailScreen extends StatefulWidget {
@@ -13,7 +13,7 @@ class TaskDetailScreen extends StatefulWidget {
 }
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
-  final _sheetsService = SheetsService();
+  final _backendService = BackendService();
   late String _currentStatus;
   bool _isUpdating = false;
 
@@ -40,7 +40,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Future<void> _updateStatus(String newStatus) async {
     setState(() => _isUpdating = true);
 
-    final success = await _sheetsService.updateTaskStatus(
+    final success = await _backendService.updateTaskStatus(
       widget.task.taskId,
       newStatus,
     );
