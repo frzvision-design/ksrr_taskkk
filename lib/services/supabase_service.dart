@@ -179,7 +179,6 @@ class SupabaseService {
       return false;
     }
   }
-}
 
   // ==================== TASK CHECKLIST ====================
 

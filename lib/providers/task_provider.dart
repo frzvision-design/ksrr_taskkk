@@ -55,7 +55,7 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final success = await _sheetsService.createTask(task);
+      final success = await _backendService.createTask(task);
       if (success) {
         await loadAllTasks();
       }
