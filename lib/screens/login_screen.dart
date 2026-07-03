@@ -102,34 +102,36 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Logo
-                        Container(
-                          height: 120,
-                          width: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFD4AF37).withOpacity(0.5),
-                                blurRadius: 20,
-                                spreadRadius: 2,
+                        Center(
+                          child: Container(
+                            height: 90,
+                            width: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFD4AF37).withOpacity(0.5),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/logo.jpg',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: const Color(0xFFD4AF37),
+                                    child: const Icon(
+                                      Icons.business,
+                                      size: 48,
+                                      color: Color(0xFF2C1810),
+                                    ),
+                                  );
+                                },
                               ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/logo.jpg',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: const Color(0xFFD4AF37),
-                                  child: const Icon(
-                                    Icons.business,
-                                    size: 60,
-                                    color: Color(0xFF2C1810),
-                                  ),
-                                );
-                              },
                             ),
                           ),
                         ),
