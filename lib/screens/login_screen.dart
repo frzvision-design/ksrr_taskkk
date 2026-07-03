@@ -28,35 +28,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _lastLoginError = null;
+      });
 
-      final user = await _backendService.login(
-        _usernameController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      try {
+        final user = await _backendService.login(
+          _usernameController.text.trim(),
+          _passwordController.text.trim(),
+        );
 
-      setState(() => _isLoading = false);
+        setState(() => _isLoading = false);
 
-      if (user != null) {
-        await _authService.saveUser(user);
+        if (user != null) {
+          await _authService.saveUser(user);
 
-        if (!mounted) return;
+          if (!mounted) return;
 
-        if (user.role == 'admin') {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
-          );
+          if (user.role == 'admin') {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => EmployeeDashboard(user: user)),
+            );
+          }
         } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => EmployeeDashboard(user: user)),
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('نام کاربری یا رمز عبور اشتباه است'),
+              backgroundColor: Color(0xFF8B4513),
+              duration: Duration(seconds: 5),
+            ),
           );
         }
-      } else {
+      } catch (e) {
+        setState(() => _isLoading = false);
         if (!mounted) return;
+        // نمایش خطای دقیق
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('نام کاربری یا رمز عبور اشتباه است'),
-            backgroundColor: Color(0xFF8B4513),
+          SnackBar(
+            content: Text('خطا: ${e.toString()}'),
+            backgroundColor: Colors.red.shade800,
+            duration: const Duration(seconds: 8),
           ),
         );
       }

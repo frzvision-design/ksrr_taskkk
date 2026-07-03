@@ -37,7 +37,7 @@ class SupabaseService {
       return null;
     } catch (e) {
       print('Login error: $e');
-      return null;
+      rethrow; // خطا را به بالا پاس بده
     }
   }
 
