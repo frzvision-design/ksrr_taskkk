@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../models/task_model.dart';
 import '../../services/backend_service.dart';
@@ -18,20 +18,29 @@ class TaskDetailScreen extends StatefulWidget {
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final _backendService = BackendService();
-  final _audioPlayer = AudioPlayer();
+  final FlutterSoundPlayer _audioPlayer = FlutterSoundPlayer();
   late String _currentStatus;
   bool _isUpdating = false;
   bool _isPlayingAudio = false;
+  bool _playerInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.task.status;
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    await _audioPlayer.openPlayer();
+    setState(() {
+      _playerInitialized = true;
+    });
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    _audioPlayer.closePlayer();
     super.dispose();
   }
 
@@ -77,23 +86,30 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (widget.task.voiceNote == null) return;
     
     try {
+      if (!_playerInitialized) {
+        await _initPlayer();
+      }
+
       if (_isPlayingAudio) {
-        await _audioPlayer.stop();
+        await _audioPlayer.stopPlayer();
         setState(() => _isPlayingAudio = false);
         return;
       }
 
       final bytes = base64Decode(widget.task.voiceNote!);
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/temp_audio.m4a');
+      final file = File('${dir.path}/temp_audio.aac');
       await file.writeAsBytes(bytes);
 
-      await _audioPlayer.play(DeviceFileSource(file.path));
+      await _audioPlayer.startPlayer(
+        fromURI: file.path,
+        codec: Codec.aacADTS,
+        whenFinished: () {
+          setState(() => _isPlayingAudio = false);
+        },
+      );
+      
       setState(() => _isPlayingAudio = true);
-
-      _audioPlayer.onPlayerComplete.listen((_) {
-        setState(() => _isPlayingAudio = false);
-      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
